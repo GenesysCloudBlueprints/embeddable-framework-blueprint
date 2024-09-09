@@ -1,0 +1,147 @@
+---
+title: Build a CRM application that uses Geensys Cloud embeddable framework
+author: agnes.corpuz
+indextype: blueprint
+icon: blueprint
+image: images/banner.png
+category: 6
+summary: |
+  This Genesys Cloud Developer Blueprint provides instructions for building a CRM application that uses the Genesys Cloud embeddable framework. This sample contains dynamic setting of the framework.js configuration items.
+---
+:::{"alert":"primary","title":"About Genesys Cloud Blueprints","autoCollapse":false} 
+Genesys Cloud blueprints were built to help you jump-start building an application or integrating with a third-party partner. 
+Blueprints are meant to outline how to build and deploy your solutions, not a production-ready turn-key solution.
+ 
+For more details on Genesys Cloud blueprint support and practices 
+please see our Genesys Cloud blueprint [FAQ](https://developer.genesys.cloud/blueprints/faq)sheet.
+:::
+
+This Genesys Cloud Developer Blueprint provides instructions for building a CRM application that uses the Genesys Cloud embeddable framework. This sample contains dynamic setting of the framework.js configuration items.
+
+![Embedded framework overview](images/overview.png "Embedded framework overview")
+
+## Solution components
+
+* **Genesys Cloud** - A suite of Genesys Cloud services for enterprise-grade communications, collaboration, and contact center management. In this solution, you use an Architect inbound message flow, a Genesys Cloud integration, a Genesys Cloud queue, web messaging configuration, and web messaging deployment.
+* **Genesys Cloud Embeddable Framework** - Enables a version of Genesys Cloud’s contact center services inside your own systems and tools.
+
+## Prerequisites
+
+### Specialized knowledge
+
+* Experience using the Genesys Cloud Embeddable Framework
+
+### Genesys Cloud account
+
+* A Genesys Cloud license. For more information, see [Genesys Cloud Pricing](https://www.genesys.com/pricing "Opens the Genesys Cloud pricing page") in the Genesys website.
+
+## Implementation steps
+
+### Download the repository containing the project files
+
+1. Clone the [embeddable-framework-blueprint repository](https://github.com/GenesysCloudBlueprints/embeddable-framework-blueprint "Opens the embeddable-framework-blueprint repository in GitHub").
+
+### Set up Genesys Cloud
+
+1. Create a Genesys Cloud OAuth client with the **Token Implicit Grant (Browser)** grant type selected.
+2. Modify **/src/public/framework.js** to add your client ID and Genesys Cloud region.
+
+### Running locally
+
+1. Verify that you are running Node.js v14.15.4 or later. 
+  * To verify your version, run `node-v`.
+  * To upgrade, run `nvm install 14.15.4`.
+  * To install the latest version, run `npm install -g n latest`.
+
+2. To install Ember CLI in your machine, run `npm install -g ember-cli` in a command-line application.
+3. Switch to the folder where the files for your messaging translation assistant are located. In the local node-modules folder run `npm install` to install the dependencies.
+4. To run the server locally, run `ember serve`.
+  * Wait until you see "Build successful...Serving on https://localhost:443/" in the Command Prompt/Terminal window.
+  * In your browser, go to https://localhost:443.
+
+### Dynamic Configuration
+
+This sample contains dynamic setting of the framework.js configuration items.
+
+* `/src/public/framework.js` - This file will get dynamic values from URL parameters.
+* `/src/app/templates/application.hbs` - HTML template for the web app. Includes the embedded iframe for the softphone. The 'src' attribute is dynamically generated from data stored in the localStorage. This value could also be generated server side or by any means where the iframe's property can be modified.
+* `/src/app/components/framework-config.js` - Contains the actions for events when the user changes any settings in the configuration page. This calls the service framework-config which handles the actual logic of storing and updating the values to the browser's localStorage.
+* `/src/app/services/framework-config.js` - Contains the logic behind saving/loading the configuration values to and from the localStorage. In production, this is recommended to be put into a proper backend storage/database.
+
+### Test the solution
+
+#### screenPop
+
+Once there is an incoming interaction in the app, there are two attribute that could change which page the agent is on: (1) PEF_SearchValue and (2) PEF_URLPop. 
+
+With PEF_SearchValue, any information could be passed to the search function of the CRM for the screen to show the Contacts search results. If there’s only one result, the screen will redirect to the contact page of the caller displaying the name, account, phone number, email and priority level. The PureCloud Embedded Framework will display the priority level, phone number and the interaction ID.
+
+With the PEF_URLPop attribute, a relative route could be chosen where the agent will be redirected instead. In practice, this is helpful to define a generic page that the agent will be taken to when handling an interaction.
+
+* `/src/public/framework.js` screenPop method should be included in this file.
+* `/src/app/components/windows-event-listener.js` This file contains the implementation of the screenPop method.
+
+  ![Screenpop](images/screenpop.png "Screenpop")
+
+#### addCustomAttributes
+
+The Contact page will trigger the addCustomAttribute action of the Embedded Framework. An attribute of PEF_Priority will be added to the interaction ID. 
+
+* `/src/public/framework.js` addCustomAttributes method should be included in the window.addEventListener of this file.
+* `/src/app/components/contact/contact-details.js` This file contains the implementation of the addCustomAttributes method.
+
+#### addAssociation
+
+The Contact page will also trigger the addAssociation action of the Embedded Framework. An association will be added with the caller as the name.
+
+* `/src/public/framework.js` addAssociation method should be included in the window.addEventListener of this file.
+* `/src/app/components/contact/contact-details.js` This file contains the implementation of the addAssociation method.
+
+#### clickToDial
+
+When the user navigates to the Contacts Page, the app will display a list of all contacts with the name, account, phone, email and priority. Once the user clicks on the phone number, the clickToDial action of the Embedded Framework will be triggered. 
+
+* `/src/public/framework.js` clickToDial method should be included in the window.addEventListener of this file.
+* `/src/app/components/phone-number.js` This file contains the implementation of the clickToDial method.
+
+#### contactSearch
+
+When the user wants to transfer the interaction, the contactSearch method of the Embedded Framework will be triggered and will enable searching contacts by name or queue plus external contacts from the external CRM. In this sample app, the default external contact is set to Weather Line with the phone number +13172222222.
+
+* `/src/public/framework.js` contactSearch method should be included in this file.
+* `/src/app/components/windows-event-listener.js` This file contains the implementation of the contactSearch method. As an example, Weather Line is added as an external contact for this application.
+
+  ![Contact search](images/contact-search.png "Contact search")
+
+#### addTransferContext
+
+When the user wants to transfer the interaction, the addTransferContext method of the Embedded Framework will be triggered. In this example, '(Case: 1234 - Broken Phone)' appears under Transfer Workspace in the Transfer window. When an agent selects Transfer Workspace and transfers the interaction, the integration sends this case with the transferred interaction.
+
+* `/src/public/framework.js` addTransferContext method should be included in the window.addEventListener of this file.
+* `/src/app/components/windows-event-listener.js` This file contains the implementation of the addTransferContext method.
+
+  ![Add transfer context](images/add-transfer-context.png "Add transfer context")
+
+#### processCallLog
+
+The processCallLog method will be triggered when there are changes in the call log such as adding an attribute, adding an association or adding notes in the Embedded Framework. In this example, an attribute and an association were added when the incoming call triggered the contact page of the caller. When the user adds a note in the Embedded Framework, the Call Logs page of the sample app will capture the note entered and will display the text under the Notes column.
+
+* `/src/public/framework.js` processCallLog method should be included in this file.
+* `/src/app/components/windows-event-listener.js` This file contains the implementation of the processCallLog method.
+
+  ![Process call log](images/process-call-log.png "Process call log")
+
+#### updateStatus
+
+The user can update their PureCloud status from the app. When the user clicks on the profile button from the sidebar, a list of status will be displayed for the user to choose from. Upon clicking a specific status, the Embedded Framework will trigger the updateStatus method.
+
+* `/src/public/framework.js` updateStatus method should be included in the window.addEventListener of this file.
+* ` /src/app/controllers/application.js` This file contains the implementation of the updateStatus method.
+
+  ![Process call log](images/update-status.png "Process call log")
+
+## Additional resources
+
+* [Embeddable Framework Overview](/platform/embeddable-framework/ "Opens the Genesys Cloud Embeddable Framework Overview page")
+* [About Genesys Cloud Embeddable Framework](https://rcstaging.wpengine.com/articles/about-genesys-cloud-embeddable-framework// "Opens the About Genesys Cloud Embeddable Framework")
+* [embeddable-framework-blueprint repository](https://github.com/GenesysCloudBlueprints/embeddable-framework-blueprint "Opens the embeddable-framework-blueprint repository in GitHub") 
