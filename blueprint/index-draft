@@ -44,6 +44,7 @@ This Genesys Cloud Developer Blueprint provides instructions for building a CRM 
 ### Set up Genesys Cloud
 
 1. Create a Genesys Cloud OAuth client with the **Token Implicit Grant (Browser)** grant type selected.
+  * Add **Authorized Redirect URI** `https://apps.mypurecloud.com/crm/index.html`
 2. Modify **/src/public/framework.js** to add your client ID and Genesys Cloud region.
 
 ### Running locally
